@@ -29,10 +29,14 @@ Tests are written before implementation. Red → Green → Refactor.
 Minimum 90% coverage enforced by pytest-cov on every CI run.
 Unit tests for domain and application. Integration tests for DB.
 
-### V. Simplicity Over Premature Abstraction
-Start with the simplest thing that works. No Celery, no queues, no caching until there is evidence of need.
-Three similar lines are better than a premature abstraction.
-Every added dependency must be justified by a real, current requirement.
+### V. Arquitectura — DDD + Hexagonal + CQRS (+ Event Sourcing si cal)
+L'arquitectura segueix DDD amb Hexagonal Architecture i CQRS, igual que kitt-api (PHP/Symfony) de THN.
+- **DDD**: Domain, Application, Infrastructure, UI layers. El domini no depèn de res extern.
+- **Hexagonal**: els ports (interfaces) al domini, els adapters (implementacions) a la infraestructura.
+- **CQRS**: Commands (escriptura) i Queries (lectura) separats amb handlers propis.
+- **Event Sourcing**: s'afegeix només quan hi hagi necessitat real d'auditoria o reconstrucció d'estat — no per defecte.
+
+Simplicitat dins d'aquest marc: no afegir capes ni abstraccions fins que el cas d'ús ho requereixi. YAGNI.
 
 ## Tech Stack
 
@@ -59,4 +63,4 @@ Aquesta constitució té prioritat sobre qualsevol altra pràctica.
 Els canvis requereixen descripció, raonament i actualització d'aquest fitxer.
 La branca `main` és sempre desplegable.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
+**Version**: 1.1.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
