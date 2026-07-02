@@ -15,8 +15,17 @@ curl -X POST http://localhost:8000/admin/invitations \
   -H "X-Admin-Secret: supersecret" \
   -H "Content-Type: application/json" \
   -d '{"email": "katia@example.com"}'
-# → 201 amb token i expires_at
-# Copia el token de la resposta
+# → 201 amb token, invite_url i expires_at
+# invite_url és el link complet que l'admin envia a l'usuari per email/WhatsApp/etc.
+# Exemple: "http://localhost:3000/accept?token=abc123..."
+```
+
+### 1b. Frontend valida el token (abans de mostrar el formulari)
+```bash
+curl http://localhost:8000/auth/invitation/<TOKEN>
+# → 200: {"email": "katia@example.com", "expires_at": "..."}  (formulari visible)
+# → 400: token expirat o ja usat
+# → 404: token no trobat
 ```
 
 ### 2. Usuari accepta la invitació

@@ -8,7 +8,7 @@
 ## Phase 1 — Setup
 
 - [ ] T001 Add `python-jose[cryptography]` and `passlib[bcrypt]` to `pyproject.toml` dependencies
-- [ ] T002 Add `ADMIN_SECRET` and `JWT_SECRET` and `JWT_EXPIRE_HOURS` to `src/yarn_plugin/config.py`
+- [ ] T002 Add `ADMIN_SECRET`, `JWT_SECRET`, `JWT_EXPIRE_HOURS` and `BASE_URL` to `src/yarn_plugin/config.py` — `BASE_URL` s'usa per construir l'invite link complet
 - [ ] T003 Create full `user_access/` directory structure under `src/yarn_plugin/` per plan.md
 - [ ] T004 Create all `__init__.py` files in new directories
 
@@ -38,12 +38,13 @@
 **Independent test**: `curl -X POST /admin/invitations -H "X-Admin-Secret: ..."` retorna 201 amb token.
 
 - [ ] T017 [US1] Create `CreateInvitationCommand` in `src/yarn_plugin/user_access/application/command/create_invitation/command.py` — fields: email
-- [ ] T018 [US1] Create `CreateInvitationHandler` in `src/yarn_plugin/user_access/application/command/create_invitation/handler.py` — genera token amb `secrets.token_urlsafe(32)`, crea `Invitation`, crida el repositori
-- [ ] T019 [US1] Create `POST /admin/invitations` controller in `src/yarn_plugin/user_access/user_interface/http/create_invitation_controller.py` — protegit per `admin_middleware`
-- [ ] T020 [US1] Create `GET /admin/invitations` controller in `src/yarn_plugin/user_access/user_interface/http/list_invitations_controller.py` — retorna llista amb status calculat (pending/accepted/expired)
+- [ ] T018 [US1] Create `CreateInvitationHandler` in `src/yarn_plugin/user_access/application/command/create_invitation/handler.py` — genera token amb `secrets.token_urlsafe(32)`, crea `Invitation`, crida el repositori; retorna també l'invite_url complet (`{BASE_URL}/accept?token={token}`)
+- [ ] T019 [US1] Create `POST /admin/invitations` controller in `src/yarn_plugin/user_access/user_interface/http/create_invitation_controller.py` — protegit per `admin_middleware`; resposta inclou `invite_url` a més del token
+- [ ] T019b [US1] Create `GET /auth/invitation/{token}` controller in `src/yarn_plugin/user_access/user_interface/http/validate_invitation_controller.py` — endpoint públic que valida si un token és vàlid (no expirat, no usat); retorna 200 amb l'email o 400/404 — permet al frontend mostrar el formulari de password
+- [ ] T020 [US1] Create `GET /admin/invitations` controller in `src/yarn_plugin/user_access/user_interface/http/list_invitations_controller.py` — retorna llista amb status calculat (pending/accepted/expired) i invite_url per cada una
 - [ ] T021 [US1] Register routers en `src/yarn_plugin/main.py`
-- [ ] T022 [US1] Write unit tests for `CreateInvitationHandler` in `tests/unit/user_access/application/command/test_create_invitation_handler.py`
-- [ ] T023 [US1] Write integration tests for `POST /admin/invitations` in `tests/integration/user_access/test_create_invitation_endpoint.py`
+- [ ] T022 [US1] Write unit tests for `CreateInvitationHandler` in `tests/unit/user_access/application/command/test_create_invitation_handler.py` — verifica que l'invite_url conté el token i el BASE_URL
+- [ ] T023 [US1] Write integration tests for `POST /admin/invitations` and `GET /auth/invitation/{token}` in `tests/integration/user_access/test_create_invitation_endpoint.py`
 
 ---
 
@@ -125,4 +126,4 @@ Les migracions (T038–T039) requereixen Docker engegat i es fan manualment.
 | 5 — US3 Login + JWT | T030–T037 | P3 |
 | 6 — Migrations | T038–T039 | — |
 | 7 — Polish | T040–T042 | — |
-| **Total** | **42 tasques** | |
+| **Total** | **43 tasques** | |

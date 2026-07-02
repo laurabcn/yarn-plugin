@@ -47,6 +47,29 @@ paths:
         "401":
           description: Invalid or missing admin secret
 
+  /auth/invitation/{token}:
+    get:
+      summary: Validate invitation token
+      description: Public endpoint. Returns invitation email if token is valid (not expired, not used). Used by the frontend to show the password form before submitting.
+      operationId: validateInvitation
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateInvitationResponse"
+        "400":
+          description: Token expired or already used
+        "404":
+          description: Token not found
+
   /auth/accept-invitation:
     post:
       summary: Accept invitation and create account
@@ -117,7 +140,7 @@ components:
 
     InvitationResponse:
       type: object
-      required: [id, email, token, status, expires_at, created_at]
+      required: [id, email, token, invite_url, status, expires_at, created_at]
       properties:
         id:
           type: string
@@ -126,6 +149,9 @@ components:
           type: string
         token:
           type: string
+        invite_url:
+          type: string
+          example: "https://yarn-plugin.com/accept?token=abc123..."
         status:
           $ref: "#/components/schemas/InvitationStatus"
         expires_at:
@@ -136,6 +162,16 @@ components:
           format: date-time
           nullable: true
         created_at:
+          type: string
+          format: date-time
+
+    ValidateInvitationResponse:
+      type: object
+      required: [email, expires_at]
+      properties:
+        email:
+          type: string
+        expires_at:
           type: string
           format: date-time
 
