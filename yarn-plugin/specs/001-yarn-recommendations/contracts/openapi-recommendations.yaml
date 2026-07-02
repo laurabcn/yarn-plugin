@@ -1,0 +1,223 @@
+openapi: "3.1.0"
+info:
+  title: Yarn Plugin API
+  description: API for yarn and knitting pattern recommendations — MCP + GPT Actions compatible
+  version: "0.1.0"
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /recommendations/yarn:
+    get:
+      summary: Get yarn recommendations
+      description: Returns a ranked list of yarn recommendations based on a natural language query.
+      operationId: getYarnRecommendations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Natural language query (e.g. "best yarn for beginners knitting a sweater")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results to return (default 5, max 20)
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: List of yarn recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YarnRecommendationsResponse"
+        "422":
+          description: Validation error
+
+  /recommendations/patterns:
+    get:
+      summary: Get pattern recommendations
+      description: Returns a ranked list of knitting pattern recommendations based on a natural language query.
+      operationId: getPatternRecommendations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Natural language query (e.g. "cozy sweater patterns for winter")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: List of pattern recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatternRecommendationsResponse"
+        "422":
+          description: Validation error
+
+  /admin/yarns:
+    post:
+      summary: Register a yarn
+      description: Register a new yarn in the catalogue (admin only, no auth in v1).
+      operationId: registerYarn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterYarnRequest"
+      responses:
+        "201":
+          description: Yarn registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YarnResponse"
+        "409":
+          description: Yarn already exists
+        "422":
+          description: Validation error
+
+components:
+  schemas:
+    YarnWeight:
+      type: string
+      enum: [lace, fingering, sport, dk, worsted, aran, bulky, super_bulky]
+
+    Difficulty:
+      type: string
+      enum: [beginner, intermediate, advanced]
+
+    PatternCategory:
+      type: string
+      enum: [sweater, hat, socks, shawl, blanket, accessory, other]
+
+    YarnResponse:
+      type: object
+      required: [id, name, brand, weight, fiber_content, tags]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        brand:
+          type: string
+        weight:
+          $ref: "#/components/schemas/YarnWeight"
+        fiber_content:
+          type: string
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    PatternResponse:
+      type: object
+      required: [id, name, designer, difficulty, yarn_weight, category, tags]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        designer:
+          type: string
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        yarn_weight:
+          $ref: "#/components/schemas/YarnWeight"
+        category:
+          $ref: "#/components/schemas/PatternCategory"
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    YarnRecommendationsResponse:
+      type: object
+      required: [results, total, message]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/YarnResponse"
+        total:
+          type: integer
+        message:
+          type: string
+          description: Human-readable summary or explanation when results are empty
+
+    PatternRecommendationsResponse:
+      type: object
+      required: [results, total, message]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatternResponse"
+        total:
+          type: integer
+        message:
+          type: string
+
+    RegisterYarnRequest:
+      type: object
+      required: [name, brand_name, weight, fiber_content]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        brand_name:
+          type: string
+          minLength: 1
+        weight:
+          $ref: "#/components/schemas/YarnWeight"
+        fiber_content:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
