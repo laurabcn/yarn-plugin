@@ -1,0 +1,180 @@
+openapi: "3.1.0"
+info:
+  title: Yarn Plugin — User Access API
+  version: "0.1.0"
+
+paths:
+  /admin/invitations:
+    post:
+      summary: Create invitation
+      description: Admin creates an invite-only invitation. Requires X-Admin-Secret header.
+      operationId: createInvitation
+      security:
+        - adminSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvitationRequest"
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationResponse"
+        "401":
+          description: Invalid or missing admin secret
+        "422":
+          description: Validation error
+
+    get:
+      summary: List invitations
+      description: List all invitations with their status. Requires X-Admin-Secret header.
+      operationId: listInvitations
+      security:
+        - adminSecret: []
+      responses:
+        "200":
+          description: List of invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvitationResponse"
+        "401":
+          description: Invalid or missing admin secret
+
+  /auth/accept-invitation:
+    post:
+      summary: Accept invitation and create account
+      operationId: acceptInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptInvitationRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptInvitationResponse"
+        "400":
+          description: Invitation expired or already used
+        "404":
+          description: Invitation not found
+        "422":
+          description: Validation error (e.g. password too short)
+
+  /auth/login:
+    post:
+      summary: Login and get JWT token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: JWT token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+
+components:
+  securitySchemes:
+    adminSecret:
+      type: apiKey
+      in: header
+      name: X-Admin-Secret
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateInvitationRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    InvitationStatus:
+      type: string
+      enum: [pending, accepted, expired]
+
+    InvitationResponse:
+      type: object
+      required: [id, email, token, status, expires_at, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        token:
+          type: string
+        status:
+          $ref: "#/components/schemas/InvitationStatus"
+        expires_at:
+          type: string
+          format: date-time
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AcceptInvitationRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    AcceptInvitationResponse:
+      type: object
+      required: [message, email]
+      properties:
+        message:
+          type: string
+          example: "Account created successfully. You can now log in."
+        email:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
