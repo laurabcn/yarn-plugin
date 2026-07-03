@@ -27,3 +27,4 @@ postgres_data/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/speckit-*
+uv.lock
