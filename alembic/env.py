@@ -1,10 +1,11 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from yarn_plugin.infrastructure.database import Base
 import yarn_plugin.recommendations.infrastructure.repository.orm  # noqa: F401
+import yarn_plugin.user_access.infrastructure.repository.orm  # noqa: F401
+from yarn_plugin.infrastructure.database import Base
 
 config = context.config
 if config.config_file_name is not None:
