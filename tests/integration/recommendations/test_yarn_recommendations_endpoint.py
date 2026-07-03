@@ -5,6 +5,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from yarn_plugin.main import app
+from yarn_plugin.recommendations.domain.model.care_instructions import CareInstructions
+from yarn_plugin.recommendations.domain.model.fiber_type import FiberType
+from yarn_plugin.recommendations.domain.model.gauge import Gauge
+from yarn_plugin.recommendations.domain.model.needle_size import NeedleSize
 from yarn_plugin.recommendations.domain.model.yarn import Yarn
 from yarn_plugin.recommendations.domain.model.yarn_weight import YarnWeight
 
@@ -20,7 +24,19 @@ def make_yarn() -> Yarn:
         brand_id=uuid4(),
         name="Drops Alaska",
         weight=YarnWeight.WORSTED,
-        fiber_content="100% wool",
+        fiber_types=[FiberType.WOOL],
+        needle_size=NeedleSize(min_mm=4.0, max_mm=5.0),
+        gauge=Gauge(stitches=18, rows=24),
+        care_instructions=CareInstructions(
+            machine_washable=True,
+            wash_temperature_celsius=30,
+            wash_program="wool",
+            bleach_allowed=False,
+            tumble_dry_allowed=False,
+            dry_clean_allowed=False,
+            dry_flat=True,
+            max_iron_temperature_celsius=110,
+        ),
         tags=["beginner-friendly", "natural"],
     )
 

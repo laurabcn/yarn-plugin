@@ -7,6 +7,10 @@ from yarn_plugin.recommendations.application.query.get_yarn_recommendations.hand
     GetYarnRecommendationsHandler,
 )
 from yarn_plugin.recommendations.application.query.get_yarn_recommendations.query import GetYarnRecommendationsQuery
+from yarn_plugin.recommendations.domain.model.care_instructions import CareInstructions
+from yarn_plugin.recommendations.domain.model.fiber_type import FiberType
+from yarn_plugin.recommendations.domain.model.gauge import Gauge
+from yarn_plugin.recommendations.domain.model.needle_size import NeedleSize
 from yarn_plugin.recommendations.domain.model.yarn import Yarn
 from yarn_plugin.recommendations.domain.model.yarn_weight import YarnWeight
 
@@ -16,7 +20,19 @@ def make_yarn(name: str = "Test Yarn") -> Yarn:
         brand_id=uuid4(),
         name=name,
         weight=YarnWeight.WORSTED,
-        fiber_content="100% wool",
+        fiber_types=[FiberType.WOOL],
+        needle_size=NeedleSize(min_mm=4.0, max_mm=5.0),
+        gauge=Gauge(stitches=18, rows=24),
+        care_instructions=CareInstructions(
+            machine_washable=True,
+            wash_temperature_celsius=30,
+            wash_program="wool",
+            bleach_allowed=False,
+            tumble_dry_allowed=False,
+            dry_clean_allowed=False,
+            dry_flat=True,
+            max_iron_temperature_celsius=110,
+        ),
         tags=["beginner-friendly"],
     )
 
