@@ -20,3 +20,10 @@ htmlcov/
 
 # Docker
 postgres_data/
+
+# Claude Code personal config (agents, commands, settings) — not project-shared,
+# except spec-kit's skills, which ARE part of the project's shared workflow.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/speckit-*

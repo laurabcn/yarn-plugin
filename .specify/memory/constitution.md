@@ -1,4 +1,11 @@
 <!-- Sync Impact Report
+Version change: 1.1.0 → 1.2.0
+Modified principles: II. Domain-First (added repository/exception conventions), IV. Test-First (added "feature ships complete" rule)
+Added sections: none (existing principles expanded, no new principle added)
+Templates requiring updates: ✅ plan-template.md (no changes needed — no new mandatory sections/constraints) / ✅ spec-template.md (no changes needed) / ✅ tasks-template.md (no changes needed)
+-->
+
+<!-- Previous Sync Impact Report (1.0.0)
 Version change: 0.0.0 (template) → 1.0.0 (initial ratification)
 Added sections: Core Principles, Tech Stack, Quality Gates, Governance
 Templates requiring updates: ✅ constitution written from template
@@ -19,6 +26,16 @@ All business logic (recommendation logic, scoring, search) lives in `domain/`.
 Application and Infrastructure layers depend on Domain — never the reverse.
 Enforced by import-linter architecture tests.
 
+Repository methods return domain objects as-is; they never encode a business selection criterion
+("the highlighted one", "the active one") — that decision belongs to a domain service, not the
+repository. A repository/finder needing data for multiple entities MUST expose a batch method
+(e.g. `find_by_ids`) — looping single lookups (N+1) is a defect, not a style preference.
+
+Domain exceptions are specific, named classes — never a bare `ValueError`/`Exception` raised from
+application or infrastructure code that a controller needs to distinguish. When wrapping a
+lower-level failure, the cause MUST be chained with `raise NewException(...) from e` — never
+silently dropped.
+
 ### III. Defensive and Transparent Responses
 Every response MUST be honest about confidence and data completeness.
 If the system doesn't have enough data to recommend, it MUST say so — never hallucinate or invent recommendations.
@@ -28,6 +45,10 @@ All recommendations MUST include the source of the data (brand info, pattern met
 Tests are written before implementation. Red → Green → Refactor.
 Minimum 90% coverage enforced by pytest-cov on every CI run.
 Unit tests for domain and application. Integration tests for DB.
+
+A feature ships complete in a single change: implementation, its test, and any new domain exception
+it raises. The test is never a follow-up change — a handler without its test is a partial feature,
+not a reviewable one.
 
 ### V. Arquitectura — DDD + Hexagonal + CQRS (+ Event Sourcing si cal)
 L'arquitectura segueix DDD amb Hexagonal Architecture i CQRS, igual que kitt-api (PHP/Symfony) de THN.
@@ -63,4 +84,4 @@ Aquesta constitució té prioritat sobre qualsevol altra pràctica.
 Els canvis requereixen descripció, raonament i actualització d'aquest fitxer.
 La branca `main` és sempre desplegable.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
+**Version**: 1.2.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-03
