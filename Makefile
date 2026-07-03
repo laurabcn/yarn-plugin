@@ -19,9 +19,6 @@ bash: ## Open shell in API container
 migrate: ## Run database migrations
 	docker compose exec api alembic upgrade head
 
-migrate-create m="": ## Create a new migration
-	docker compose exec api alembic revision --autogenerate -m "$(m)"
-
 test: ## Run all tests
 	docker compose exec api pytest
 
