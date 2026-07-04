@@ -9,6 +9,7 @@ from yarn_plugin.recommendations.application.query.get_pattern_recommendations.h
 from yarn_plugin.recommendations.application.query.get_pattern_recommendations.query import (
     GetPatternRecommendationsQuery,
 )
+from yarn_plugin.recommendations.application.query.get_pattern_recommendations.response import PatternDto
 from yarn_plugin.recommendations.infrastructure.repository.sqlalchemy_pattern_repository import (
     SqlAlchemyPatternRepository,
 )
@@ -42,6 +43,23 @@ class PatternRecommendationsResponseModel(BaseModel):
     message: str
 
 
+def pattern_dto_to_response_model(dto: PatternDto) -> PatternResponseModel:
+    return PatternResponseModel(
+        id=str(dto.id),
+        name=dto.name,
+        brand_id=str(dto.brand_id),
+        difficulty=dto.difficulty.value,
+        yarn_weight=dto.yarn_weight.value,
+        category=dto.category.value,
+        language=dto.language.value,
+        needle_size=NeedleSizeResponseModel(min_mm=dto.needle_size.min_mm, max_mm=dto.needle_size.max_mm),
+        recommended_yarn_id=str(dto.recommended_yarn_id) if dto.recommended_yarn_id else None,
+        popularity_rating=dto.popularity_rating,
+        description=dto.description,
+        tags=list(dto.tags),
+    )
+
+
 @router.get("/patterns", response_model=PatternRecommendationsResponseModel)
 async def get_pattern_recommendations(
     query: str = Query(..., min_length=1, max_length=500, description="Natural language query"),
@@ -53,25 +71,7 @@ async def get_pattern_recommendations(
     response = await handler.handle(GetPatternRecommendationsQuery(query_text=query, limit=limit))
 
     return PatternRecommendationsResponseModel(
-        results=[
-            PatternResponseModel(
-                id=str(dto.id),
-                name=dto.name,
-                brand_id=str(dto.brand_id),
-                difficulty=dto.difficulty.value,
-                yarn_weight=dto.yarn_weight.value,
-                category=dto.category.value,
-                language=dto.language.value,
-                needle_size=NeedleSizeResponseModel(
-                    min_mm=dto.needle_size.min_mm, max_mm=dto.needle_size.max_mm
-                ),
-                recommended_yarn_id=str(dto.recommended_yarn_id) if dto.recommended_yarn_id else None,
-                popularity_rating=dto.popularity_rating,
-                description=dto.description,
-                tags=list(dto.tags),
-            )
-            for dto in response.results
-        ],
+        results=[pattern_dto_to_response_model(dto) for dto in response.results],
         total=response.total,
         message=response.message,
     )

@@ -7,6 +7,7 @@ from yarn_plugin.recommendations.application.query.get_yarn_recommendations.hand
     GetYarnRecommendationsHandler,
 )
 from yarn_plugin.recommendations.application.query.get_yarn_recommendations.query import GetYarnRecommendationsQuery
+from yarn_plugin.recommendations.application.query.get_yarn_recommendations.response import YarnDto
 from yarn_plugin.recommendations.infrastructure.repository.sqlalchemy_yarn_repository import SqlAlchemyYarnRepository
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
@@ -72,6 +73,49 @@ class YarnRecommendationsResponseModel(BaseModel):
     message: str
 
 
+def yarn_dto_to_response_model(dto: YarnDto) -> YarnResponseModel:
+    return YarnResponseModel(
+        id=str(dto.id),
+        name=dto.name,
+        brand_id=str(dto.brand_id),
+        weight=dto.weight.value,
+        fiber_types=[fiber_type.value for fiber_type in dto.fiber_types],
+        gauge=GaugeResponseModel(stitches=dto.gauge.stitches, rows=dto.gauge.rows),
+        care_instructions=CareInstructionsResponseModel(
+            machine_washable=dto.care_instructions.machine_washable,
+            wash_temperature_celsius=dto.care_instructions.wash_temperature_celsius,
+            wash_program=dto.care_instructions.wash_program,
+            bleach_allowed=dto.care_instructions.bleach_allowed,
+            tumble_dry_allowed=dto.care_instructions.tumble_dry_allowed,
+            dry_clean_allowed=dto.care_instructions.dry_clean_allowed,
+            dry_flat=dto.care_instructions.dry_flat,
+            max_iron_temperature_celsius=dto.care_instructions.max_iron_temperature_celsius,
+        ),
+        description=dto.description,
+        needle_size=(
+            NeedleSizeResponseModel(min_mm=dto.needle_size.min_mm, max_mm=dto.needle_size.max_mm)
+            if dto.needle_size
+            else None
+        ),
+        ball_spec=(
+            BallSpecResponseModel(weight_grams=dto.ball_spec.weight_grams, length_meters=dto.ball_spec.length_meters)
+            if dto.ball_spec
+            else None
+        ),
+        crochet_hook_size_mm=dto.crochet_hook_size_mm,
+        tags=list(dto.tags),
+        colors=[ColorResponseModel(code=color.code, name=color.name) for color in dto.colors],
+        balls_per_garment=[
+            BallsRequirementResponseModel(
+                garment_size=requirement.garment_size,
+                sleeve_type=requirement.sleeve_type.value,
+                balls_needed=requirement.balls_needed,
+            )
+            for requirement in dto.balls_per_garment
+        ],
+    )
+
+
 @router.get("/yarn", response_model=YarnRecommendationsResponseModel)
 async def get_yarn_recommendations(
     query: str = Query(..., min_length=1, max_length=500, description="Natural language query"),
@@ -83,51 +127,7 @@ async def get_yarn_recommendations(
     response = await handler.handle(GetYarnRecommendationsQuery(query_text=query, limit=limit))
 
     return YarnRecommendationsResponseModel(
-        results=[
-            YarnResponseModel(
-                id=str(dto.id),
-                name=dto.name,
-                brand_id=str(dto.brand_id),
-                weight=dto.weight.value,
-                fiber_types=[fiber_type.value for fiber_type in dto.fiber_types],
-                gauge=GaugeResponseModel(stitches=dto.gauge.stitches, rows=dto.gauge.rows),
-                care_instructions=CareInstructionsResponseModel(
-                    machine_washable=dto.care_instructions.machine_washable,
-                    wash_temperature_celsius=dto.care_instructions.wash_temperature_celsius,
-                    wash_program=dto.care_instructions.wash_program,
-                    bleach_allowed=dto.care_instructions.bleach_allowed,
-                    tumble_dry_allowed=dto.care_instructions.tumble_dry_allowed,
-                    dry_clean_allowed=dto.care_instructions.dry_clean_allowed,
-                    dry_flat=dto.care_instructions.dry_flat,
-                    max_iron_temperature_celsius=dto.care_instructions.max_iron_temperature_celsius,
-                ),
-                description=dto.description,
-                needle_size=(
-                    NeedleSizeResponseModel(min_mm=dto.needle_size.min_mm, max_mm=dto.needle_size.max_mm)
-                    if dto.needle_size
-                    else None
-                ),
-                ball_spec=(
-                    BallSpecResponseModel(
-                        weight_grams=dto.ball_spec.weight_grams, length_meters=dto.ball_spec.length_meters
-                    )
-                    if dto.ball_spec
-                    else None
-                ),
-                crochet_hook_size_mm=dto.crochet_hook_size_mm,
-                tags=list(dto.tags),
-                colors=[ColorResponseModel(code=color.code, name=color.name) for color in dto.colors],
-                balls_per_garment=[
-                    BallsRequirementResponseModel(
-                        garment_size=requirement.garment_size,
-                        sleeve_type=requirement.sleeve_type.value,
-                        balls_needed=requirement.balls_needed,
-                    )
-                    for requirement in dto.balls_per_garment
-                ],
-            )
-            for dto in response.results
-        ],
+        results=[yarn_dto_to_response_model(dto) for dto in response.results],
         total=response.total,
         message=response.message,
     )

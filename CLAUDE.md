@@ -35,17 +35,17 @@ src/yarn_plugin/
 
 - [x] Scaffold inicial: Docker, FastAPI, pyproject.toml, Makefile
 - [x] `/health` endpoint
-- [ ] Models de domini (Yarn, Pattern, Brand)
-- [ ] Migracions Alembic
-- [ ] Endpoints de recomanació
-- [ ] MCP server integration
+- [x] Models de domini (Yarn, Pattern, Brand)
+- [x] Migracions Alembic
+- [x] Endpoints de recomanació (`GET /recommendations/yarn`, `GET /recommendations/patterns`)
+- [x] MCP server integration (`src/yarn_plugin/mcp_server.py` — `get_yarn_recommendations`, `get_pattern_recommendations`)
 - [ ] OpenAPI spec completa
 
 ## Proper pas
 
-Implementar els models de domini i els primers endpoints:
-1. `GET /recommendations/yarn?query=...` — recomanacions de llana per pregunta en text lliure
-2. `GET /recommendations/patterns?query=...` — recomanacions de patrons
+- Provar el servidor MCP des de Claude Desktop/Code de debò (configurar-lo com a servidor stdio local)
+- `Technique` (com fer un punt de knit/crochet) — spec ja escrita a `specs/001-yarn-recommendations` (Phase 7, US4)
+- Considerar transport HTTP/remot per al servidor MCP quan calgui desplegar-lo fora de local
 
 Seguir el flux de spec-kit: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`
 
