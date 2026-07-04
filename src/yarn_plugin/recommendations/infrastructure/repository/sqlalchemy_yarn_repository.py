@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from yarn_plugin.recommendations.domain.model.ball_spec import BallSpec
@@ -14,6 +14,7 @@ from yarn_plugin.recommendations.domain.model.sleeve_type import SleeveType
 from yarn_plugin.recommendations.domain.model.yarn import Yarn
 from yarn_plugin.recommendations.domain.model.yarn_weight import YarnWeight
 from yarn_plugin.recommendations.domain.repository.yarn_repository_interface import YarnRepositoryInterface
+from yarn_plugin.recommendations.infrastructure.repository.full_text_search import search_vector_matches
 from yarn_plugin.recommendations.infrastructure.repository.orm.yarn_orm import YarnModel
 
 
@@ -62,7 +63,7 @@ class SqlAlchemyYarnRepository(YarnRepositoryInterface):
     async def search(self, query: str, limit: int = 5) -> list[Yarn]:
         stmt = (
             select(YarnModel)
-            .where(YarnModel.search_vector.op("@@")(func.plainto_tsquery("english", query)))
+            .where(search_vector_matches(YarnModel.search_vector, query))
             .limit(limit)
         )
         result = await self._session.execute(stmt)

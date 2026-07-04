@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from yarn_plugin.recommendations.domain.model.difficulty import Difficulty
@@ -12,6 +12,7 @@ from yarn_plugin.recommendations.domain.model.yarn_weight import YarnWeight
 from yarn_plugin.recommendations.domain.repository.pattern_repository_interface import (
     PatternRepositoryInterface,
 )
+from yarn_plugin.recommendations.infrastructure.repository.full_text_search import search_vector_matches
 from yarn_plugin.recommendations.infrastructure.repository.orm.pattern_orm import PatternModel
 
 
@@ -42,7 +43,7 @@ class SqlAlchemyPatternRepository(PatternRepositoryInterface):
     async def search(self, query: str, limit: int = 5) -> list[Pattern]:
         stmt = (
             select(PatternModel)
-            .where(PatternModel.search_vector.op("@@")(func.plainto_tsquery("english", query)))
+            .where(search_vector_matches(PatternModel.search_vector, query))
             .limit(limit)
         )
         result = await self._session.execute(stmt)
