@@ -62,10 +62,13 @@ src/yarn_plugin/
 │   │   ├── model/
 │   │   │   ├── yarn.py          # Yarn aggregate
 │   │   │   ├── pattern.py       # Pattern aggregate
-│   │   │   └── brand.py         # Brand entity
+│   │   │   ├── brand.py         # Brand entity
+│   │   │   ├── craft_type.py    # CraftType enum (knit/crochet) — US4
+│   │   │   └── technique.py     # Technique aggregate — US4
 │   │   ├── repository/
 │   │   │   ├── yarn_repository_interface.py
-│   │   │   └── pattern_repository_interface.py
+│   │   │   ├── pattern_repository_interface.py
+│   │   │   └── technique_repository_interface.py
 │   │   └── service/
 │   │       └── recommendation_scorer.py
 │   ├── application/
@@ -74,18 +77,26 @@ src/yarn_plugin/
 │   │   │   │   ├── query.py
 │   │   │   │   ├── handler.py
 │   │   │   │   └── response.py
-│   │   │   └── get_pattern_recommendations/
+│   │   │   ├── get_pattern_recommendations/
+│   │   │   │   ├── query.py
+│   │   │   │   ├── handler.py
+│   │   │   │   └── response.py
+│   │   │   └── get_technique/
 │   │   │       ├── query.py
 │   │   │       ├── handler.py
 │   │   │       └── response.py
 │   │   └── command/
-│   │       └── register_yarn/
+│   │       ├── register_yarn/
+│   │       │   ├── command.py
+│   │       │   └── handler.py
+│   │       └── register_technique/
 │   │           ├── command.py
 │   │           └── handler.py
 │   └── infrastructure/
 │       └── repository/
 │           ├── sqlalchemy_yarn_repository.py
-│           └── sqlalchemy_pattern_repository.py
+│           ├── sqlalchemy_pattern_repository.py
+│           └── sqlalchemy_technique_repository.py
 ├── shared/
 │   └── domain/
 │       └── object/

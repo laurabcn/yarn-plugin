@@ -1,0 +1,174 @@
+openapi: "3.1.0"
+info:
+  title: Yarn Plugin API — Pattern & Technique Recommendations
+  description: >
+    Pattern recommendations sourced live from Ravelry (no local storage of pattern content),
+    and stitch/technique how-to instructions from our own curated catalog.
+    Supersedes the locally-stored PatternResponse/PatternCategory contract sketched in
+    001-yarn-recommendations/contracts/openapi-recommendations.yaml.
+  version: "0.1.0"
+
+paths:
+  /recommendations/patterns:
+    get:
+      summary: Get pattern recommendations
+      description: >
+        Returns pattern recommendations sourced live from Ravelry based on a natural language
+        query. Never returns a fabricated pattern; states clearly when there is no match or
+        when Ravelry is unavailable.
+      operationId: getPatternRecommendations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Natural language query (e.g. "cozy beginner sweater for winter")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: List of pattern recommendations (may be empty — see `message`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatternRecommendationsResponse"
+        "422":
+          description: Validation error
+        "503":
+          description: Ravelry (external pattern index) is temporarily unavailable
+
+  /recommendations/techniques:
+    get:
+      summary: Get a stitch/technique how-to
+      description: >
+        Returns step-by-step instructions for a knitting or crochet technique, matched by name
+        or natural language query against our own curated catalog. Never fabricates instructions.
+      operationId: getTechniqueRecommendations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Technique name or natural language query (e.g. "how do I purl", "chain stitch")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - name: craft_type
+          in: query
+          required: false
+          description: Restrict results to one craft when the name is ambiguous across knit/crochet
+          schema:
+            $ref: "#/components/schemas/CraftType"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: List of matching techniques (may be empty — see `message`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechniqueRecommendationsResponse"
+        "422":
+          description: Validation error
+
+components:
+  schemas:
+    CraftType:
+      type: string
+      enum: [knit, crochet]
+
+    Difficulty:
+      type: string
+      enum: [beginner, intermediate, advanced]
+
+    PatternCategory:
+      type: string
+      enum: [sweater, hat, socks, shawl, blanket, accessory, other]
+
+    PatternResponse:
+      type: object
+      required: [name, category, craft_type, source_url, required_technique_names]
+      properties:
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/PatternCategory"
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+          nullable: true
+          description: Null when Ravelry does not report a difficulty for this pattern
+        craft_type:
+          $ref: "#/components/schemas/CraftType"
+        description:
+          type: string
+          nullable: true
+        source_url:
+          type: string
+          format: uri
+          description: Attribution link back to the pattern on Ravelry
+        required_technique_names:
+          type: array
+          items:
+            type: string
+          description: >
+            Technique names as reported by Ravelry. Not guaranteed to resolve to an entry in
+            our own Technique catalog — see GetTechniqueRecommendations for lookup.
+
+    TechniqueResponse:
+      type: object
+      required: [id, name, craft_type, instructions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        craft_type:
+          $ref: "#/components/schemas/CraftType"
+        instructions:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    PatternRecommendationsResponse:
+      type: object
+      required: [results, total, message]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatternResponse"
+        total:
+          type: integer
+        message:
+          type: string
+          description: Human-readable summary; explains empty results or a Ravelry outage
+
+    TechniqueRecommendationsResponse:
+      type: object
+      required: [results, total, message]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/TechniqueResponse"
+        total:
+          type: integer
+        message:
+          type: string

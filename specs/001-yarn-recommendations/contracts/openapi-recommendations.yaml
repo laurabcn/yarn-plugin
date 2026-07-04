@@ -86,6 +86,67 @@ paths:
         "422":
           description: Validation error
 
+  /recommendations/techniques:
+    get:
+      summary: Get a stitch/technique how-to
+      description: >
+        Returns step-by-step instructions for a knitting or crochet technique, matched by name
+        or natural language query against our own curated catalog. Never fabricates instructions.
+      operationId: getTechniqueRecommendations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Technique name or natural language query (e.g. "how do I purl", "chain stitch")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - name: craft_type
+          in: query
+          required: false
+          description: Restrict results to one craft when the name is ambiguous across knit/crochet
+          schema:
+            $ref: "#/components/schemas/CraftType"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: List of matching techniques (may be empty — see `message`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechniqueRecommendationsResponse"
+        "422":
+          description: Validation error
+
+  /admin/techniques:
+    post:
+      summary: Register a technique
+      description: Register a new technique in the catalogue (admin only, no auth in v1).
+      operationId: registerTechnique
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterTechniqueRequest"
+      responses:
+        "201":
+          description: Technique registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechniqueResponse"
+        "422":
+          description: Validation error
+
   /admin/yarns:
     post:
       summary: Register a yarn
@@ -123,6 +184,10 @@ components:
       type: string
       enum: [sweater, hat, socks, shawl, blanket, accessory, other]
 
+    CraftType:
+      type: string
+      enum: [knit, crochet]
+
     YarnResponse:
       type: object
       required: [id, name, brand, weight, fiber_content, tags]
@@ -146,23 +211,50 @@ components:
           items:
             type: string
 
+    Language:
+      type: string
+      enum: [ca, es, en]
+
+    NeedleSize:
+      type: object
+      required: [min_mm, max_mm]
+      properties:
+        min_mm:
+          type: number
+        max_mm:
+          type: number
+
     PatternResponse:
       type: object
-      required: [id, name, designer, difficulty, yarn_weight, category, tags]
+      required: [id, name, brand_id, difficulty, yarn_weight, category, language, needle_size, tags]
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
-        designer:
+        brand_id:
           type: string
+          format: uuid
         difficulty:
           $ref: "#/components/schemas/Difficulty"
         yarn_weight:
           $ref: "#/components/schemas/YarnWeight"
         category:
           $ref: "#/components/schemas/PatternCategory"
+        language:
+          $ref: "#/components/schemas/Language"
+        needle_size:
+          $ref: "#/components/schemas/NeedleSize"
+        recommended_yarn_id:
+          type: string
+          format: uuid
+          nullable: true
+        popularity_rating:
+          type: number
+          nullable: true
+          minimum: 1
+          maximum: 5
         description:
           type: string
           nullable: true
@@ -170,6 +262,52 @@ components:
           type: array
           items:
             type: string
+
+    TechniqueResponse:
+      type: object
+      required: [id, name, craft_type, instructions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        craft_type:
+          $ref: "#/components/schemas/CraftType"
+        instructions:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    TechniqueRecommendationsResponse:
+      type: object
+      required: [results, total, message]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/TechniqueResponse"
+        total:
+          type: integer
+        message:
+          type: string
+
+    RegisterTechniqueRequest:
+      type: object
+      required: [name, craft_type, instructions]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        craft_type:
+          $ref: "#/components/schemas/CraftType"
+        instructions:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
 
     YarnRecommendationsResponse:
       type: object

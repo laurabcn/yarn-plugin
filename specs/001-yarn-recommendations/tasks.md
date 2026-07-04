@@ -53,16 +53,16 @@
 
 **Independent test**: `curl "http://localhost:8000/recommendations/patterns?query=cozy+sweater"` retorna JSON vàlid.
 
-- [ ] T024 [P] [US2] Create `Pattern` aggregate in `src/yarn_plugin/recommendations/domain/model/pattern.py` with fields: id (UUID), brand_id (designer), name, difficulty (Difficulty), yarn_weight (YarnWeight), category (PatternCategory), description, tags, created_at
-- [ ] T025 [P] [US2] Create `PatternRepositoryInterface` in `src/yarn_plugin/recommendations/domain/repository/pattern_repository_interface.py` with methods: `save(pattern)`, `search(query: str, limit: int) -> list[Pattern]`
-- [ ] T026 [US2] Create SQLAlchemy `PatternModel` ORM in `src/yarn_plugin/recommendations/infrastructure/repository/orm/pattern_orm.py` amb `search_vector tsvector`
-- [ ] T027 [US2] Create Alembic migration for `patterns` table amb `make migrate-create m="create_patterns_table"`
-- [ ] T028 [US2] Create `SqlAlchemyPatternRepository` in `src/yarn_plugin/recommendations/infrastructure/repository/sqlalchemy_pattern_repository.py`
-- [ ] T029 [US2] Create `GetPatternRecommendationsQuery`, `Response` i `Handler` a `src/yarn_plugin/recommendations/application/query/get_pattern_recommendations/` — mateix patró que US1
-- [ ] T030 [US2] Create `GET /recommendations/patterns` endpoint in `src/yarn_plugin/recommendations/user_interface/http/get_pattern_recommendations_controller.py`
-- [ ] T031 [US2] Register endpoint in `src/yarn_plugin/main.py`
-- [ ] T032 [US2] Write unit tests per al handler en `tests/unit/recommendations/application/query/test_get_pattern_recommendations_handler.py`
-- [ ] T033 [US2] Write integration test en `tests/integration/recommendations/test_pattern_recommendations_endpoint.py`
+- [x] T024 [P] [US2] Create `Pattern` aggregate in `src/yarn_plugin/recommendations/domain/model/pattern.py` with fields: id (UUID), brand_id (designer), name, difficulty (Difficulty), yarn_weight (YarnWeight), category (PatternCategory), language (Language, new enum), needle_size (NeedleSize, reused from Yarn), recommended_yarn_id (UUID | None, FK to Yarn), popularity_rating (float | None, 1-5), description, tags, created_at
+- [x] T025 [P] [US2] Create `PatternRepositoryInterface` in `src/yarn_plugin/recommendations/domain/repository/pattern_repository_interface.py` with methods: `save(pattern)`, `search(query: str, limit: int) -> list[Pattern]`, `find_by_name_and_brand(name, brand_id)`
+- [x] T026 [US2] Create SQLAlchemy `PatternModel` ORM in `src/yarn_plugin/recommendations/infrastructure/repository/orm/pattern_orm.py` amb `search_vector tsvector`
+- [x] T027 [US2] Create Alembic migration for `patterns` table with `docker compose run --rm api alembic revision --autogenerate -m "create patterns table"` (the `make migrate-create` target no longer exists), then `make migrate` — remember to import `PatternModel` in `orm/__init__.py` first so autogenerate detects it (see the Yarn migration fix) — applied as `e910eab7e245`, verified with `alembic check`
+- [x] T028 [US2] Create `SqlAlchemyPatternRepository` in `src/yarn_plugin/recommendations/infrastructure/repository/sqlalchemy_pattern_repository.py`
+- [x] T029 [US2] Create `GetPatternRecommendationsQuery`, `Response` i `Handler` a `src/yarn_plugin/recommendations/application/query/get_pattern_recommendations/` — mateix patró que US1
+- [x] T030 [US2] Create `GET /recommendations/patterns` endpoint in `src/yarn_plugin/recommendations/user_interface/http/get_pattern_recommendations_controller.py`
+- [x] T031 [US2] Register endpoint in `src/yarn_plugin/main.py`
+- [x] T032 [US2] Write unit tests per al handler en `tests/unit/recommendations/application/query/test_get_pattern_recommendations_handler.py`
+- [x] T033 [US2] Write integration test en `tests/integration/recommendations/test_pattern_recommendations_endpoint.py`
 
 ---
 
@@ -90,6 +90,31 @@
 
 ---
 
+## Phase 7 — US4: Stitch/Technique How-To
+
+**Story goal**: `GET /recommendations/techniques?query=...` retorna instruccions pas a pas d'una tècnica del catàleg propi (curat, sense dependència externa) — independent de Pattern.
+
+**Independent test**: `curl "http://localhost:8000/recommendations/techniques?query=how+do+I+purl"` retorna JSON vàlid.
+
+- [ ] T044 [P] [US4] Create `CraftType` enum in `src/yarn_plugin/recommendations/domain/model/craft_type.py` with values: knit, crochet
+- [ ] T045 [P] [US4] Create `Technique` aggregate in `src/yarn_plugin/recommendations/domain/model/technique.py` with fields: id (UUID), name, craft_type (CraftType), instructions, description, created_at
+- [ ] T046 [P] [US4] Create `TechniqueRepositoryInterface` in `src/yarn_plugin/recommendations/domain/repository/technique_repository_interface.py` with methods: `save(technique)`, `search(query: str, craft_type: CraftType | None, limit: int) -> list[Technique]`
+- [ ] T047 [US4] Create SQLAlchemy `TechniqueModel` ORM in `src/yarn_plugin/recommendations/infrastructure/repository/orm/technique_orm.py`
+- [ ] T048 [US4] Import `TechniqueModel` in `src/yarn_plugin/recommendations/infrastructure/repository/orm/__init__.py` so Alembic autogenerate detects it (see the ORM-registration fix applied for Yarn)
+- [ ] T049 [US4] Create Alembic migration for `techniques` table with `docker compose run --rm api alembic revision --autogenerate -m "create techniques table"`, then `make migrate`
+- [ ] T050 [US4] Create `SqlAlchemyTechniqueRepository` in `src/yarn_plugin/recommendations/infrastructure/repository/sqlalchemy_technique_repository.py`
+- [ ] T051 [US4] Create `GetTechniqueQuery`, `Response` (with `TechniqueDto`) and `Handler` in `src/yarn_plugin/recommendations/application/query/get_technique/` — same shape as US1; never guesses a craft type when the name is ambiguous across knit/crochet (spec US4 acceptance scenario 2)
+- [ ] T052 [US4] Create `RegisterTechniqueCommand` and `RegisterTechniqueCommandHandler` in `src/yarn_plugin/recommendations/application/command/register_technique/` — needed to seed the catalog
+- [ ] T053 [US4] Create `GET /recommendations/techniques` endpoint (with optional `craft_type` query param) in `src/yarn_plugin/recommendations/user_interface/http/get_technique_controller.py`
+- [ ] T054 [US4] Create `POST /admin/techniques` endpoint in `src/yarn_plugin/recommendations/user_interface/http/register_technique_controller.py`
+- [ ] T055 [US4] Register both endpoints in `src/yarn_plugin/main.py`
+- [ ] T056 [P] [US4] Write unit tests for `GetTechniqueHandler` in `tests/unit/recommendations/application/query/test_get_technique_handler.py` — cover found / no-match / ambiguous-craft-type cases
+- [ ] T057 [P] [US4] Write unit tests for `RegisterTechniqueCommandHandler` in `tests/unit/recommendations/application/command/test_register_technique_handler.py`
+- [ ] T058 [US4] Write integration test for `GET /recommendations/techniques` and `POST /admin/techniques` in `tests/integration/recommendations/test_technique_endpoint.py`
+- [ ] T059 [US4] Seed the technique catalog with 20-50 real knit/crochet techniques via `POST /admin/techniques` or a script at `scripts/seed_techniques.py`
+
+---
+
 ## Dependencies
 
 ```
@@ -97,11 +122,12 @@ Phase 1 (Setup)
     └── Phase 2 (Foundational: Brand, enums, DB)
             ├── Phase 3 (US1: Yarn recommendations)  ← MVP
             ├── Phase 4 (US2: Pattern recommendations)
-            └── Phase 5 (US3: Registration)
-                        └── Phase 6 (Polish)
+            ├── Phase 5 (US3: Registration)
+            │           └── Phase 6 (Polish)
+            └── Phase 7 (US4: Technique how-to)  ← independent of US2/US3
 ```
 
-US3 i US4 poden desenvolupar-se en paral·lel un cop Phase 2 és completa.
+US2, US3 i US4 poden desenvolupar-se en paral·lel un cop Phase 2 és completa — Phase 7 no comparteix cap fitxer amb US2/US3 excepte `main.py`.
 
 ## MVP Scope
 
@@ -119,4 +145,5 @@ Amb això, un assistent d'IA pot consultar `GET /recommendations/yarn` i retorna
 | 4 — US2 Pattern Recs | T024–T033 | P2 |
 | 5 — US3 Registration | T034–T039 | P3 |
 | 6 — Polish | T040–T043 | — |
-| **Total** | **43 tasques** | |
+| 7 — US4 Technique How-To | T044–T059 | P3 |
+| **Total** | **59 tasques** | |

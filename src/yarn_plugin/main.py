@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from yarn_plugin.recommendations.user_interface.http.get_pattern_recommendations_controller import (
+    router as pattern_recommendations_router,
+)
 from yarn_plugin.recommendations.user_interface.http.get_yarn_recommendations_controller import (
     router as recommendations_router,
 )
@@ -24,6 +27,7 @@ app = FastAPI(
 )
 
 app.include_router(recommendations_router)
+app.include_router(pattern_recommendations_router)
 app.include_router(create_invitation_router)
 app.include_router(list_invitations_router)
 app.include_router(validate_invitation_router)
