@@ -42,11 +42,7 @@ class SqlAlchemyPatternRepository(PatternRepositoryInterface):
     async def search(self, query: str, limit: int = 5) -> list[Pattern]:
         stmt = (
             select(PatternModel)
-            .where(
-                func.to_tsvector("english", PatternModel.search_vector).op("@@")(
-                    func.plainto_tsquery("english", query)
-                )
-            )
+            .where(PatternModel.search_vector.op("@@")(func.plainto_tsquery("english", query)))
             .limit(limit)
         )
         result = await self._session.execute(stmt)

@@ -62,11 +62,7 @@ class SqlAlchemyYarnRepository(YarnRepositoryInterface):
     async def search(self, query: str, limit: int = 5) -> list[Yarn]:
         stmt = (
             select(YarnModel)
-            .where(
-                func.to_tsvector("english", YarnModel.search_vector).op("@@")(
-                    func.plainto_tsquery("english", query)
-                )
-            )
+            .where(YarnModel.search_vector.op("@@")(func.plainto_tsquery("english", query)))
             .limit(limit)
         )
         result = await self._session.execute(stmt)
